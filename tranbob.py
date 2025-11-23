@@ -15,6 +15,14 @@ if not api_key:
 
 client = OpenAI(api_key=api_key)
 
+# Define folder paths
+INPUT_DIR = "input"
+OUTPUT_DIR = "output"
+
+# Ensure directories exist
+os.makedirs(INPUT_DIR, exist_ok=True)
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 def extract_audio_from_mp4(mp4_path, wav_path):
     """Extracts audio from MP4 and saves as WAV (16kHz mono)"""
     print(f"🎥 Extracting audio from {mp4_path} ...")
@@ -59,29 +67,35 @@ def transcribe_and_label(audio_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python tranbob.py <file> [-w]")
-        print("Default is MP4, use -w if input is already WAV")
+        print("Usage: python tranbob.py <filename> [-w]")
+        print("Place input files in the 'input/' folder")
+        print("Use -w flag if input is already WAV, otherwise assumes MP4")
         sys.exit(1)
 
-    input_file = sys.argv[1]
+    filename = sys.argv[1]
     is_wav = "-w" in sys.argv
+
+    # Construct full input path
+    input_file = os.path.join(INPUT_DIR, filename)
 
     if not os.path.exists(input_file):
         print(f"❌ File not found: {input_file}")
+        print(f"💡 Make sure the file is in the '{INPUT_DIR}/' folder")
         sys.exit(1)
 
     if is_wav:
         wav_file = input_file
     else:
-        base_name = os.path.splitext(input_file)[0]
-        wav_file = f"{base_name}_temp.wav"
+        base_name = os.path.splitext(filename)[0]
+        wav_file = os.path.join(INPUT_DIR, f"{base_name}_temp.wav")
         extract_audio_from_mp4(input_file, wav_file)
 
     # Run transcription with speaker labeling
     labeled_transcript = transcribe_and_label(wav_file)
 
-    # Save transcript
-    output_file = os.path.splitext(input_file)[0] + "_transcript.txt"
+    # Save transcript to output folder
+    base_name = os.path.splitext(filename)[0]
+    output_file = os.path.join(OUTPUT_DIR, f"{base_name}_transcript.txt")
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(labeled_transcript)
 

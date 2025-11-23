@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a Python-based audio/video transcription tool that uses OpenAI's Whisper API for transcription and GPT-4o-mini for speaker diarization (labeling different speakers in the transcript).
 
+## Project Structure
+
+```
+transcribe/
+├── input/          # Place audio/video files here (gitignored)
+├── output/         # Transcripts are saved here (gitignored)
+├── tranbob.py      # Main transcription script
+├── .env            # API credentials (gitignored)
+└── CLAUDE.md       # This file
+```
+
 ## Architecture
 
 The main script `tranbob.py` follows a two-stage pipeline:
@@ -29,12 +40,12 @@ Configuration in `.env`:
 
 **Run transcription on MP4 file:**
 ```bash
-python tranbob.py <video.mp4>
+python tranbob.py video.mp4
 ```
 
 **Run transcription on WAV file (skip extraction):**
 ```bash
-python tranbob.py <audio.wav> -w
+python tranbob.py audio.wav -w
 ```
 
 **Install missing dependencies:**
@@ -44,7 +55,10 @@ pip install openai
 
 ## Important Notes
 
+- All input files must be placed in the `input/` folder
+- The script expects only the filename as argument, not the full path
+- Output transcripts are saved to `output/` folder as `<filename>_transcript.txt`
 - The script expects ffmpeg to be installed and available in PATH for MP4 processing
-- Output is saved as `<input_filename>_transcript.txt` in the same directory as input
-- Temporary WAV files are automatically cleaned up after MP4 processing
+- Temporary WAV files are created in the `input/` folder and automatically cleaned up after processing
 - The `.env` file contains sensitive API credentials and should never be committed to version control
+- Both `input/` and `output/` folders are gitignored to prevent committing media files and transcripts

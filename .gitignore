@@ -1,15 +1,13 @@
 # Environment variables (contains API keys)
 .env
 
-# Audio/Video files
-*.wav
-*.mp4
-*.mp3
-*.avi
-*.mov
+# Input folder (contains audio/video files)
+input/*
+!input/.gitkeep
 
-# Transcript output files
-*_transcript.txt
+# Output folder (contains transcripts)
+output/*
+!output/.gitkeep
 
 # Python
 __pycache__/
