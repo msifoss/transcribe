@@ -1,0 +1,32 @@
+# Environment variables (contains API keys)
+.env
+
+# Audio/Video files
+*.wav
+*.mp4
+*.mp3
+*.avi
+*.mov
+
+# Transcript output files
+*_transcript.txt
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
