@@ -67,13 +67,12 @@ def transcribe_and_label(audio_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python tranbob.py <filename> [-w]")
+        print("Usage: python tranbob.py <filename>")
         print("Place input files in the 'input/' folder")
-        print("Use -w flag if input is already WAV, otherwise assumes MP4")
+        print("Supported formats: .mp3, .wav, .mp4")
         sys.exit(1)
 
     filename = sys.argv[1]
-    is_wav = "-w" in sys.argv
 
     # Construct full input path
     input_file = os.path.join(INPUT_DIR, filename)
@@ -83,15 +82,28 @@ if __name__ == "__main__":
         print(f"💡 Make sure the file is in the '{INPUT_DIR}/' folder")
         sys.exit(1)
 
-    if is_wav:
-        wav_file = input_file
-    else:
+    # Determine file type by extension
+    ext = os.path.splitext(filename)[1].lower()
+    audio_formats = [".mp3", ".wav", ".m4a", ".webm", ".mpga", ".mpeg"]
+    video_formats = [".mp4"]
+
+    if ext in audio_formats:
+        # Audio files can be sent directly to Whisper API
+        audio_file = input_file
+        needs_cleanup = False
+    elif ext in video_formats:
+        # Video files need audio extraction
         base_name = os.path.splitext(filename)[0]
-        wav_file = os.path.join(INPUT_DIR, f"{base_name}_temp.wav")
-        extract_audio_from_mp4(input_file, wav_file)
+        audio_file = os.path.join(INPUT_DIR, f"{base_name}_temp.wav")
+        extract_audio_from_mp4(input_file, audio_file)
+        needs_cleanup = True
+    else:
+        print(f"❌ Unsupported file format: {ext}")
+        print(f"💡 Supported formats: {', '.join(audio_formats + video_formats)}")
+        sys.exit(1)
 
     # Run transcription with speaker labeling
-    labeled_transcript = transcribe_and_label(wav_file)
+    labeled_transcript = transcribe_and_label(audio_file)
 
     # Save transcript to output folder
     base_name = os.path.splitext(filename)[0]
@@ -101,7 +113,7 @@ if __name__ == "__main__":
 
     print(f"✅ Transcript saved to {output_file}")
 
-    # Cleanup temp WAV if created
-    if not is_wav and os.path.exists(wav_file):
-        os.remove(wav_file)
+    # Cleanup temp WAV if created from video
+    if needs_cleanup and os.path.exists(audio_file):
+        os.remove(audio_file)
         print("🧹 Temp file removed")
