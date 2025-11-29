@@ -34,6 +34,23 @@ def extract_audio_from_mp4(mp4_path, wav_path):
     subprocess.run(cmd, check=True)
     print(f"🎵 Audio extracted to {wav_path}")
 
+def process_with_instructions(transcript, instruction_file):
+    """Process transcript using OpenAI with custom instructions from a file"""
+    print(f"🧠 Processing transcript with instructions from {instruction_file}...")
+
+    with open(instruction_file, "r", encoding="utf-8") as f:
+        instructions = f.read().strip()
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": instructions},
+            {"role": "user", "content": transcript}
+        ]
+    )
+
+    return response.choices[0].message.content.strip()
+
 def transcribe_and_label(audio_path):
     # Step 1: Transcribe the audio
     print(f"🎙 Transcribing {audio_path} ...")
@@ -67,12 +84,27 @@ def transcribe_and_label(audio_path):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python tranbob.py <filename>")
+        print("Usage: python tranbob.py <filename> [--tink <instruction_file>]")
         print("Place input files in the 'input/' folder")
         print("Supported formats: .mp3, .wav, .mp4")
+        print("Options:")
+        print("  --tink <file>  Process transcript with instructions from file")
         sys.exit(1)
 
     filename = sys.argv[1]
+
+    # Parse --tink flag
+    tink_file = None
+    if "--tink" in sys.argv:
+        tink_idx = sys.argv.index("--tink")
+        if tink_idx + 1 < len(sys.argv):
+            tink_file = sys.argv[tink_idx + 1]
+            if not os.path.exists(tink_file):
+                print(f"❌ Instruction file not found: {tink_file}")
+                sys.exit(1)
+        else:
+            print("❌ --tink requires an instruction file argument")
+            sys.exit(1)
 
     # Construct full input path
     input_file = os.path.join(INPUT_DIR, filename)
@@ -112,6 +144,14 @@ if __name__ == "__main__":
         f.write(labeled_transcript)
 
     print(f"✅ Transcript saved to {output_file}")
+
+    # Process with tink instructions if specified
+    if tink_file:
+        tink_result = process_with_instructions(labeled_transcript, tink_file)
+        tink_output = os.path.join(OUTPUT_DIR, f"{base_name}_transcript-tink.txt")
+        with open(tink_output, "w", encoding="utf-8") as f:
+            f.write(tink_result)
+        print(f"✅ Tink output saved to {tink_output}")
 
     # Cleanup temp WAV if created from video
     if needs_cleanup and os.path.exists(audio_file):
